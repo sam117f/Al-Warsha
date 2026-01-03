@@ -1,39 +1,40 @@
-name: Android Build Debug
+name: Al-Warsha Rescue Mission 🚑
 
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+  workflow_dispatch:
 
 jobs:
-  build:
+  rescue_build:
     runs-on: ubuntu-latest
-
     steps:
-    # 1. جلب الكود من المستودع
-    - name: Checkout code
-      uses: actions/checkout@v4
+      # 1. استدعاء الكود
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    # 2. إعداد بيئة الجافا (مهم جداً استخدام نسخة 17 للتوافق مع أغلب مشاريع أندرويد الحديثة)
-    - name: Set up JDK 17
-      uses: actions/setup-java@v4
-      with:
-        java-version: '17'
-        distribution: 'temurin'
-        cache: gradle
+      # 2. تجهيز الجافا
+      - name: Setup Java
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
 
-    # 3. خطوة إصلاح الصلاحيات (هذا هو الحل السحري لمشكلة Permission denied)
-    - name: Grant execute permission for gradlew
-      run: chmod +x gradlew
+      # 3. الحل الجذري: توليد ملف التشغيل الناقص
+      - name: Fix Missing Gradle Wrapper
+        run: gradle wrapper --gradle-version 8.4
 
-    # 4. بناء ملف التطبيق (APK) نسخة Debug
-    - name: Build with Gradle
-      run: ./gradlew assembleDebug
+      # 4. إعطاء صلاحيات التشغيل
+      - name: Grant Permission
+        run: chmod +x gradlew
 
-    # 5. رفع ملف الـ APK الناتج لكي تتمكن من تحميله
-    - name: Upload APK
-      uses: actions/upload-artifact@v4
-      with:
-        name: app-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+      # 5. بناء التطبيق
+      - name: Build APK
+        run: ./gradlew assembleDebug
+
+      # 6. إرسال التطبيق لك
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Al-Warsha-Final
+          path: app/build/outputs/apk/debug/app-debug.apk
