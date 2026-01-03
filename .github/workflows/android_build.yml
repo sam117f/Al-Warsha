@@ -1,4 +1,4 @@
-name: Al-Warsha Solid Build 🧱
+name: Auto-Fix & Build 🛠️
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
 
 jobs:
-  build:
+  fix_build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -18,19 +18,33 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # هذه الخطوة ستحضر أداة البناء بنفسها ولن تعتمد على ملفاتك
       - name: Setup Gradle
         uses: gradle/gradle-build-action@v2
         with:
-          gradle-version: '8.4'
+          gradle-version: '8.2'
 
-      # هنا نأمر بالبناء المباشر
-      - name: Build APK Directly
+      # 1. الإصلاح الجذري: إعادة كتابة ملفات الإعدادات لضمان صحتها
+      - name: Force Fix Config Files
+        run: |
+          echo 'pluginManagement { repositories { google(); mavenCentral(); gradlePluginPortal() } }' > settings.gradle.kts
+          echo 'dependencyResolutionManagement { repositoriesMode.set(RepositoriesMode.FAIL_ON_PROJECT_REPOS); repositories { google(); mavenCentral() } }' >> settings.gradle.kts
+          echo 'rootProject.name = "Al-Warsha"' >> settings.gradle.kts
+          echo 'include(":app")' >> settings.gradle.kts
+          
+          echo 'plugins { id("com.android.application") version "8.1.0" apply false; id("org.jetbrains.kotlin.android") version "1.8.0" apply false }' > build.gradle.kts
+
+      # 2. تشخيص: عرض قائمة الملفات لنعرف ماذا يوجد داخل الصندوق
+      - name: List Files (Debug)
+        run: find . -maxdepth 4 -not -path '*/.*'
+
+      # 3. البناء
+      - name: Build APK
         run: gradle assembleDebug --stacktrace --no-daemon
 
+      # 4. الإرسال
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: Al-Warsha-Final
+          name: Al-Warsha-App
           path: app/build/outputs/apk/debug/app-debug.apk
           
